@@ -1,0 +1,19 @@
+# Build output
+code/backend/build/
+build/
+*.o
+*.a
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+npm-debug.log*
+
+# Editor and OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Fetched market data (populated by scripts/fetch_data.py)
+code/backend/data/*.csv

@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y g++ cmake
+      - name: Configure
+        run: cmake -S code/backend -B code/backend/build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build code/backend/build -j
+      - name: Test
+        run: cd code/backend/build && ctest --output-on-failure
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: cd frontend && npm ci || npm install
+      - name: Build
+        run: cd frontend && npm run build

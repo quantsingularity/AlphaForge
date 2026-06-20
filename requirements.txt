@@ -1,0 +1,4 @@
+# Data ingestion for AlphaForge. Used by scripts/fetch_data.py to pull real
+# daily OHLCV from Yahoo Finance.
+yfinance>=0.2.40
+pandas>=2.0

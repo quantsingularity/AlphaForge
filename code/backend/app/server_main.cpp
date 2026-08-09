@@ -68,6 +68,17 @@ optional<int> query_int(const httplib::Request& req, const string& key) {
     }
 }
 
+// Pulls the bearer token out of `Authorization: Bearer <token>`. Returns an
+// empty string when the header is absent or malformed.
+string bearer_token(const httplib::Request& req) {
+    const auto header = req.get_header_value("Authorization");
+    const string prefix = "Bearer ";
+    if (header.rfind(prefix, 0) != 0) {
+        return "";
+    }
+    return header.substr(prefix.size());
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -120,6 +131,59 @@ int main(int argc, char** argv) {
                                {"bars", app.market().bar_count(s)}});
         }
         send_json(res, json{{"symbols", arr}});
+    });
+
+    // Authentication. Accounts are hashed and persisted by AuthManager; the
+    // routes below just translate HTTP <-> that layer. Session tokens are
+    // opaque bearer strings returned by register/login and expected in an
+    // `Authorization: Bearer <token>` header on /api/auth/me and /logout.
+    server.Post("/api/auth/register", [&](const httplib::Request& req, httplib::Response& res) {
+        json body;
+        try {
+            body = json::parse(req.body);
+        } catch (...) {
+            send_error(res, "invalid JSON body", 400);
+            return;
+        }
+        const auto result = app.auth().register_user(body.value("name", ""),
+                                                      body.value("email", ""),
+                                                      body.value("password", ""));
+        if (!result.ok) {
+            send_error(res, result.error, 400);
+            return;
+        }
+        send_json(res, json{{"token", result.token}, {"user", to_json(result.user)}}, 201);
+    });
+
+    server.Post("/api/auth/login", [&](const httplib::Request& req, httplib::Response& res) {
+        json body;
+        try {
+            body = json::parse(req.body);
+        } catch (...) {
+            send_error(res, "invalid JSON body", 400);
+            return;
+        }
+        const auto result = app.auth().login(body.value("email", ""),
+                                             body.value("password", ""));
+        if (!result.ok) {
+            send_error(res, result.error, 401);
+            return;
+        }
+        send_json(res, json{{"token", result.token}, {"user", to_json(result.user)}});
+    });
+
+    server.Post("/api/auth/logout", [&](const httplib::Request& req, httplib::Response& res) {
+        app.auth().logout(bearer_token(req));
+        send_json(res, json{{"ok", true}});
+    });
+
+    server.Get("/api/auth/me", [&](const httplib::Request& req, httplib::Response& res) {
+        const auto user = app.auth().user_for_token(bearer_token(req));
+        if (!user) {
+            send_error(res, "not authenticated", 401);
+            return;
+        }
+        send_json(res, json{{"user", to_json(*user)}});
     });
 
     // Market data for a symbol, optionally limited to the last N bars.

@@ -124,3 +124,15 @@ export interface OrderResponse {
   };
   portfolio: Portfolio;
 }
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  created_at: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: AuthUser;
+}

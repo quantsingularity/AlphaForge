@@ -9,7 +9,9 @@ namespace alphaforge {
 Application::Application()
     : market_(make_shared<MarketDataEngine>()),
       portfolio_(make_shared<Portfolio>(Config::instance().initial_capital())),
-      orders_(make_unique<OrderManager>(*portfolio_)) {
+      orders_(make_unique<OrderManager>(*portfolio_)),
+      auth_(make_unique<AuthManager>(Config::instance().data_directory() +
+                                     "/users.json")) {
     // The portfolio observes market data so its marks track the latest bar.
     market_->subscribe(weak_ptr<IMarketDataObserver>(portfolio_));
 }

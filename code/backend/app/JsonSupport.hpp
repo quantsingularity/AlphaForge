@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analytics/AnalyticsEngine.hpp"
+#include "auth/AuthManager.hpp"
 #include "backtesting/Backtester.hpp"
 #include "common/Types.hpp"
 #include "execution/OrderManager.hpp"
@@ -118,6 +119,13 @@ inline json series_to_json(const vector<SeriesPoint>& series) {
         arr.push_back(to_json(p));
     }
     return arr;
+}
+
+inline json to_json(const AuthUser& u) {
+    return json{{"id", u.id},
+                {"name", u.name},
+                {"email", u.email},
+                {"created_at", u.created_at}};
 }
 
 } // namespace alphaforge

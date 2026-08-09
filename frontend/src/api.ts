@@ -4,6 +4,8 @@
 
 import type {
   Analytics,
+  AuthResponse,
+  AuthUser,
   BacktestResult,
   Bar,
   Health,
@@ -14,9 +16,35 @@ import type {
 } from "./types";
 
 const BASE = "/api";
+const TOKEN_KEY = "alphaforge.token";
+
+// The bearer token is kept in memory for the life of the tab and mirrored to
+// localStorage so a page refresh does not sign the user out. AuthContext is
+// the only caller that should invoke setAuthToken; everything else just
+// benefits from it being attached automatically below.
+let authToken: string | null =
+  typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
+
+export function getAuthToken(): string | null {
+  return authToken;
+}
+
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+  if (typeof window === "undefined") return;
+  if (token) {
+    window.localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    window.localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+function authHeaders(): Record<string, string> {
+  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+}
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(`${BASE}${path}`, { headers: authHeaders() });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(
@@ -29,7 +57,7 @@ async function getJson<T>(path: string): Promise<T> {
 async function postJson<T>(path: string, payload: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
@@ -81,4 +109,10 @@ export const api = {
   undo: () => postJson<{ undone: boolean; portfolio: Portfolio }>("/undo", {}),
   backtest: (req: BacktestRequest) =>
     postJson<BacktestResult>("/backtest", req),
+  register: (name: string, email: string, password: string) =>
+    postJson<AuthResponse>("/auth/register", { name, email, password }),
+  login: (email: string, password: string) =>
+    postJson<AuthResponse>("/auth/login", { email, password }),
+  logout: () => postJson<{ ok: boolean }>("/auth/logout", {}),
+  me: () => getJson<{ user: AuthUser }>("/auth/me"),
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "analytics/AnalyticsEngine.hpp"
+#include "auth/AuthManager.hpp"
 #include "backtesting/Backtester.hpp"
 #include "backtesting/StrategyFactory.hpp"
 #include "core/Config.hpp"
@@ -34,6 +35,7 @@ public:
     RiskEngine&       risk() { return risk_; }
     AnalyticsEngine&  analytics() { return analytics_; }
     ThreadPool&       pool() { return pool_; }
+    AuthManager&      auth() { return *auth_; }
     mutex&       trade_mutex() { return trade_mutex_; }
 
     [[nodiscard]] static string version() { return "1.0.0"; }
@@ -45,6 +47,7 @@ private:
     RiskEngine                        risk_;
     AnalyticsEngine                   analytics_;
     ThreadPool                        pool_;
+    unique_ptr<AuthManager>      auth_;
     mutex                        trade_mutex_;
 };
 

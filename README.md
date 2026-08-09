@@ -11,6 +11,10 @@ emphasis is on correct, well-tested financial logic and a clean architecture rat
 than on breadth of half-finished features. Every simplifying assumption is stated
 plainly in the Limitations table rather than hidden.
 
+<div align="center">
+  <img src="docs/images/homepage.bmp" alt="AlphaForge HomePage" width="80%">
+</div>
+
 |                 |                                                                 |
 | --------------- | --------------------------------------------------------------- |
 | **Language**    | C++20 (engine), TypeScript + React (web)                        |

@@ -15,6 +15,16 @@ add_compile_options(-Wall -Wextra)
 find_package(Threads REQUIRED)
 
 # ---------------------------------------------------------------------------
+# Third party header only dependencies. Declared before the engine library
+# because AuthManager (inside the engine itself) uses nlohmann/json for
+# account persistence, not just the REST server's JSON translation layer.
+# ---------------------------------------------------------------------------
+add_library(alphaforge_thirdparty INTERFACE)
+target_include_directories(alphaforge_thirdparty INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/httplib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+
+# ---------------------------------------------------------------------------
 # Core engine library. All domain logic lives here so the CLI, REST server,
 # tests and benchmarks share exactly one implementation.
 # ---------------------------------------------------------------------------
@@ -23,13 +33,7 @@ file(GLOB ENGINE_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cp
 add_library(alphaforge_engine STATIC ${ENGINE_SOURCES})
 target_include_directories(alphaforge_engine PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(alphaforge_engine PUBLIC Threads::Threads)
-
-# Third party header only dependencies for the REST server.
-add_library(alphaforge_thirdparty INTERFACE)
-target_include_directories(alphaforge_thirdparty INTERFACE
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/httplib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+target_link_libraries(alphaforge_engine PUBLIC Threads::Threads alphaforge_thirdparty)
 
 # ---------------------------------------------------------------------------
 # Executables
@@ -39,7 +43,7 @@ target_link_libraries(alphaforge_cli PRIVATE alphaforge_engine)
 
 add_executable(alphaforge_server app/server_main.cpp)
 target_include_directories(alphaforge_server PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/app")
-target_link_libraries(alphaforge_server PRIVATE alphaforge_engine alphaforge_thirdparty)
+target_link_libraries(alphaforge_server PRIVATE alphaforge_engine)
 
 add_executable(alphaforge_bench benchmarks/benchmark_main.cpp)
 target_link_libraries(alphaforge_bench PRIVATE alphaforge_engine)

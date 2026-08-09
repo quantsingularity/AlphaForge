@@ -15,6 +15,8 @@ plainly in the Limitations table rather than hidden.
   <img src="docs/images/homepage.bmp" alt="AlphaForge HomePage" width="80%">
 </div>
 
+## Technical Overview
+
 |                 |                                                                 |
 | --------------- | --------------------------------------------------------------- |
 | **Language**    | C++20 (engine), TypeScript + React (web)                        |
